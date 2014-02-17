@@ -25,7 +25,17 @@ server.post('/endpoints', function(req, res) {
     async.each(endpoints, function(endp, callback) {
         if (endp.endpoint == post.name)
         {
-            endp.endpoint = post.value; // trade in new value from client
+            // delete value
+            if (post.value == '')
+            {
+                var index = endpoints.indexOf(endp);
+                if (index > -1) {
+                    endpoints.splice(index, 1);
+                }
+            }
+            else
+                endp.endpoint = post.value; // trade in new value from client
+
             newURL = false;
         }
     });
@@ -62,8 +72,16 @@ server.get("/healthcheck", function(req, res) {
         	_healthprog += 1/total_urls;
         	request.abort();
         }).on('error', function(err) {
-        	if (err.code !== 'ECONNRESET')
+        	if (err.code !== 'ECONNRESET' && err.code !== 'ECONNREFUSED')
         		console.log('ERROR: ' + err);
+            if (err.code === 'ECONNREFUSED')
+            {
+                var obj = {};
+                obj.status = 404;
+                obj.url = health_url.endpoint;
+                urlarr.push(obj);
+                _healthprog += 1/total_urls;
+            }
         	request.abort();
     	}).on('close', function(err) {
 	        callback();

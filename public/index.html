@@ -31,20 +31,12 @@
 		<tbody>
 		</tbody>
 	</table>
-	<a href="javascript:findRow();" id="run-btn" class="btn btn-primary btn-lg ladda-button btnstyle pull-right" data-spinner-color="black" data-style="zoom-out">Run</a>
+	<a href="javascript:healthcheck();" id="run-btn" class="btn btn-primary btn-lg ladda-button btnstyle pull-right" data-spinner-color="black" data-style="zoom-out">Check</a>
 </div>
 <script type="text/javascript">
+
 $.fn.editable.defaults.mode = 'inline';
 
-function findRow(query) {
-	var tableRow = $("td").filter(function() {
-	    return $(this).text() == "http://www.google.com";
-	}).closest("tr").children('td');
-	$(tableRow).attr('class', 'success');
-	$(':nth-child(2)', $(tableRow)).text('hello');
-	console.log(tableRow);
-	console.log($(':nth-child(1)', $(tableRow)));
-}
 $(document).ready(function() {
     $.ajax({
 			type: "GET",
@@ -68,6 +60,11 @@ function createRow(val) {
 	$(cellurl).html('<a href="#" onclick="javascript:rowClick(this);" data-pk="1" class="endpoint" data-name="' + val + '" data-type="text">'+ val + '</a>');
 }
 function rowClick(element) {
+	var rowIndex = $(element)
+	    .closest('tr') // Get the closest tr parent element
+	    .prevAll() // Find all sibling elements in front of it
+	    .length; // Get their count
+	console.log(rowIndex);
 	// if user clicked the 'Empty' last row, add another
 	if ($(element).closest("tr").is(":last-child"))
 	{
@@ -79,8 +76,8 @@ function setEditable() {
 	$('.endpoint').editable({
 	    type: 'text',
 	    url: '/endpoints',
+	    emptytext: 'Add endpoint',
 	    success: function(response, newValue) {
-	        console.log('response');
 	    }
 	});
 }
@@ -99,8 +96,8 @@ function healthcheck()
 			var tableRow = $("td").filter(function() {
 			    return $(this).text() == value.url;
 			}).closest("tr");
-			$(tableRow).children('td')
-
+			$(':nth-child(2)', $(tableRow)).text(value.status);
+			console.log('code: ' + value.status);
 			if (value.status == 200 || value.status == 302)
 				$(tableRow).attr('class', 'success');
 			else
