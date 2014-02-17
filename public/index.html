@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<script src="http://code.jquery.com/jquery.js"></script>
+<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<!-- Ladda; spinning button -->
+<script type="text/javascript" src="js/ladda/spin.min.js"></script>
+<script type="text/javascript" src="js/ladda/ladda.min.js"></script>
+<link rel="stylesheet" type="text/css" href="css/ladda/ladda-themeless.min.css">
+<!-- X-editable; editable BS tables -->
+<link href="http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+<title>HealthCheck</title>
+</head>
+
+<body>
+<div class="container">
+	<div class="jumbotron">
+		<h1>HealthCheck</h1>
+		<p>Enter URLs below to save them to the server, then click 'Run" to perform test</p>
+	</div>
+	<table id="endpoints-table" class="wrapit table table-condensed">
+		<thead>
+			<tr>
+				<th class="col-md-11">Endpoint</th>
+				<th class="col-md-1">Status</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+	<a href="javascript:findRow();" id="run-btn" class="btn btn-primary btn-lg ladda-button btnstyle pull-right" data-spinner-color="black" data-style="zoom-out">Run</a>
+</div>
+<script type="text/javascript">
+$.fn.editable.defaults.mode = 'inline';
+
+function findRow(query) {
+	var tableRow = $("td").filter(function() {
+	    return $(this).text() == "http://www.google.com";
+	}).closest("tr").children('td');
+	$(tableRow).attr('class', 'success');
+	$(':nth-child(2)', $(tableRow)).text('hello');
+	console.log(tableRow);
+	console.log($(':nth-child(1)', $(tableRow)));
+}
+$(document).ready(function() {
+    $.ajax({
+			type: "GET",
+			url: "endpoints"
+		}).done(function(msg) {
+			var endpoints = JSON.parse(msg);
+			$.each(endpoints, function(key, value) {
+				createRow(value.endpoint);
+			});
+			createRow(''); // add 'Empty' line
+			setEditable();
+	});
+});
+
+function createRow(val) {
+	var tableRef = document.getElementById('endpoints-table').getElementsByTagName('tbody')[0];
+	var row = tableRef.insertRow(tableRef.rows.length);
+	var cellurl = row.insertCell(0);
+	var cellstatus = row.insertCell(1);
+	// we need to set data-name so we can have the previous value to submit to the server
+	$(cellurl).html('<a href="#" onclick="javascript:rowClick(this);" data-pk="1" class="endpoint" data-name="' + val + '" data-type="text">'+ val + '</a>');
+}
+function rowClick(element) {
+	// if user clicked the 'Empty' last row, add another
+	if ($(element).closest("tr").is(":last-child"))
+	{
+		createRow('');
+		setEditable();
+	}
+}
+function setEditable() {
+	$('.endpoint').editable({
+	    type: 'text',
+	    url: '/endpoints',
+	    success: function(response, newValue) {
+	        console.log('response');
+	    }
+	});
+}
+function healthcheck()
+{
+	var l = Ladda.create( document.querySelector('#run-btn'));
+	l.start();
+	var poll = true;
+	var success = true;
+	$.ajax({
+		type: "GET",
+		url: "healthcheck"
+	}).done(function(msg) {
+		var result = JSON.parse(msg);
+		$.each(result.arr, function(index, value) {
+			var tableRow = $("td").filter(function() {
+			    return $(this).text() == value.url;
+			}).closest("tr");
+			$(tableRow).children('td')
+
+			if (value.status == 200 || value.status == 302)
+				$(tableRow).attr('class', 'success');
+			else
+				$(tableRow).attr('class', 'danger');
+		});
+		l.stop();
+		poll = false;
+	});
+	var progint = setInterval(function() {
+		$.ajax({
+			type: "GET",
+			url: "healthprog"
+		}).done(function(msg) {
+			l.setProgress(msg.prog);
+			if (poll == false)
+				clearInterval(progint);
+		});
+	}, 200);
+}
+
+</script>
+</body>
+</html>

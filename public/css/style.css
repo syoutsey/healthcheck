@@ -1,0 +1,7 @@
+.container {
+	width: 900px;
+}
+.wrapit {
+	table-layout: fixed;
+	word-wrap: break-word;
+}
