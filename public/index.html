@@ -19,7 +19,7 @@
 <div class="container">
 	<div class="jumbotron">
 		<h1>HealthCheck</h1>
-		<p>Enter URLs below to save them to the server, then click 'Run" to perform test</p>
+		<p>Enter URLs below to save them to the server, then click 'Check' to perform test</p>
 	</div>
 	<table id="endpoints-table" class="wrapit table table-condensed">
 		<thead>
@@ -34,7 +34,7 @@
 	<a href="javascript:healthcheck();" id="run-btn" class="btn btn-primary btn-lg ladda-button btnstyle pull-right" data-spinner-color="black" data-style="zoom-out">Check</a>
 </div>
 <script type="text/javascript">
-
+var _okCodes = [200, 302];
 $.fn.editable.defaults.mode = 'inline';
 
 $(document).ready(function() {
@@ -48,6 +48,11 @@ $(document).ready(function() {
 			});
 			createRow(''); // add 'Empty' line
 			setEditable();
+	});
+	$('.endpoint').on('shown', function(e, params) {
+		console.log($(this));
+	    alert('Saved value: ' + params.newValue);
+	    $(this).attr('data-name', params.newValue);
 	});
 });
 
@@ -83,7 +88,7 @@ function setEditable() {
 }
 function healthcheck()
 {
-	var l = Ladda.create( document.querySelector('#run-btn'));
+	var l = Ladda.create(document.querySelector('#run-btn'));
 	l.start();
 	var poll = true;
 	var success = true;
@@ -97,8 +102,8 @@ function healthcheck()
 			    return $(this).text() == value.url;
 			}).closest("tr");
 			$(':nth-child(2)', $(tableRow)).text(value.status);
-			console.log('code: ' + value.status);
-			if (value.status == 200 || value.status == 302)
+
+			if (_okCodes.indexOf(Number(value.status)) > -1)
 				$(tableRow).attr('class', 'success');
 			else
 				$(tableRow).attr('class', 'danger');

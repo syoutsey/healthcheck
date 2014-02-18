@@ -1,1 +1,1 @@
-[{"endpoint":"http://www.google.com"},{"endpoint":"http://www.yahoo.com"},{"endpoint":"http://www.facebook.com"}]
+[{"endpoint":"http://www.google.com"},{"endpoint":"http://www.facebook.com"},{"endpoint":"http://nonexistanturl.com"},{"endpoint":"http://www.apple.com"}]

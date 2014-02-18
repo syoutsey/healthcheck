@@ -20,9 +20,12 @@ server.get('/endpoints', function(req, res) {
 
 server.post('/endpoints', function(req, res) {
     var post = req.body;
+    console.log('name: ' + post.name);
+    console.log('value: ' + post.value);
     var endpoints = JSON.parse(fs.readFileSync(_endpointsFile, {'encoding' : 'utf8' }));
     var newURL = true;
     async.each(endpoints, function(endp, callback) {
+        console.log(endp.endpoint);
         if (endp.endpoint == post.name)
         {
             // delete value
@@ -74,7 +77,7 @@ server.get("/healthcheck", function(req, res) {
         }).on('error', function(err) {
         	if (err.code !== 'ECONNRESET' && err.code !== 'ECONNREFUSED')
         		console.log('ERROR: ' + err);
-            if (err.code === 'ECONNREFUSED')
+            if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND')
             {
                 var obj = {};
                 obj.status = 404;
